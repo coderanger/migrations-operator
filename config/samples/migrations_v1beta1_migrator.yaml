@@ -1,0 +1,7 @@
+apiVersion: migrations.coderanger.net/v1beta1
+kind: Migrator
+metadata:
+  name: migrator-sample
+spec:
+  # Add fields here
+  foo: bar

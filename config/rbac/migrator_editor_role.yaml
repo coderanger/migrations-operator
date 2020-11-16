@@ -1,0 +1,24 @@
+# permissions for end users to edit migrators.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: migrator-editor-role
+rules:
+- apiGroups:
+  - migrations.coderanger.net
+  resources:
+  - migrators
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - migrations.coderanger.net
+  resources:
+  - migrators/status
+  verbs:
+  - get

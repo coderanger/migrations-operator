@@ -1,0 +1,7 @@
+domain: coderanger.net
+repo: github.com/coderanger/migrations-operator
+resources:
+- group: migrations
+  kind: Migrator
+  version: v1beta1
+version: "2"
