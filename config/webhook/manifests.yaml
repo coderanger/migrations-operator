@@ -14,7 +14,7 @@ webhooks:
       name: webhook-service
       namespace: system
       path: /mutate-v1-pod
-  failurePolicy: Fail
+  failurePolicy: Ignore
   name: mpod.migrations.coderanger.net
   rules:
   - apiGroups:
