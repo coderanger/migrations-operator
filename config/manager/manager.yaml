@@ -27,13 +27,12 @@ spec:
         - /manager
         args:
         - --enable-leader-election
-        image: controller:latest
+        image: ghcr.io/coderanger/migrations-operator:latest
         name: manager
         resources:
           limits:
-            cpu: 100m
-            memory: 30Mi
+            memory: 256M
           requests:
             cpu: 100m
-            memory: 20Mi
+            memory: 128M
       terminationGracePeriodSeconds: 10

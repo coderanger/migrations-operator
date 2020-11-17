@@ -7,9 +7,9 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - ""
+  - batch
   resources:
-  - secrets
+  - jobs
   verbs:
   - create
   - get
@@ -18,9 +18,9 @@ rules:
   - update
   - watch
 - apiGroups:
-  - rabbitmq.coderanger.net
+  - migrations.coderanger.net
   resources:
-  - rabbitusers
+  - migrators
   verbs:
   - create
   - delete
@@ -30,9 +30,9 @@ rules:
   - update
   - watch
 - apiGroups:
-  - rabbitmq.coderanger.net
+  - migrations.coderanger.net
   resources:
-  - rabbitusers/status
+  - migrators/status
   verbs:
   - get
   - patch

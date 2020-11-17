@@ -24,9 +24,9 @@ import (
 	migrationsv1beta1 "github.com/coderanger/migrations-operator/api/v1beta1"
 )
 
-// +kubebuilder:rbac:groups=rabbitmq.coderanger.net,resources=rabbitusers,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=rabbitmq.coderanger.net,resources=rabbitusers/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch
+// +kubebuilder:rbac:groups=migrations.coderanger.net,resources=migrators,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=migrations.coderanger.net,resources=migrators/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;patch
 
 func Migrator(mgr ctrl.Manager) error {
 	return cu.NewReconciler(mgr).
