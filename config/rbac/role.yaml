@@ -6,6 +6,31 @@ metadata:
   creationTimestamp: null
   name: manager-role
 rules:
+- resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - deplyoments
+  - replicasets
+  - statfulsets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  verbs:
+  - get
+  - list
+  - watch
 - apiGroups:
   - batch
   resources:
