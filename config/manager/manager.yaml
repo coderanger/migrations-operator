@@ -29,6 +29,11 @@ spec:
         - --enable-leader-election
         image: ghcr.io/coderanger/migrations-operator:latest
         name: manager
+        env:
+        - name: API_HOSTNAME
+          value: $(API_SERVICE_NAME).$(API_SERVICE_NAMESPACE).svc:5000
+        - name: WAITER_IMAGE
+          value: $(MANAGER_CONTAINER_IMAGE)
         resources:
           limits:
             memory: 256M

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+  namespace: system
+spec:
+  selector:
+    control-plane: controller-manager
+  ports:
+  - port: 5000
