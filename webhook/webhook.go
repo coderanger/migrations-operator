@@ -37,7 +37,7 @@ import (
 const REQUIRE_MIGRATOR_ANNOTATION = "migrations.coderanger.net/required"
 const NOWAIT_MIGRATOR_ANNOTATION = "migrations.coderanger.net/no-wait"
 
-// +kubebuilder:webhook:path=/mutate-v1-pod,mutating=true,failurePolicy=ignore,sideEffects=None,groups="",resources=pods,verbs=create;update,versions=v1,name=mpod.migrations.coderanger.net
+// +kubebuilder:webhook:path=/mutate-v1-pod,mutating=true,failurePolicy=ignore,sideEffects=None,groups="",resources=pods,verbs=create;update,versions=v1,name=mpod.migrations.coderanger.net,admissionReviewVersions=v1beta1
 
 // initInjector injects migration initContainers into Pods
 type initInjector struct {
