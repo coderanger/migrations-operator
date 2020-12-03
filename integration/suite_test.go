@@ -35,6 +35,11 @@ var suiteHelper *cu.FunctionalSuiteHelper
 func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
 
+	// TODO Why is Skip not working? It's counting as a test fail.
+	if os.Getenv("INTEGRATION_EXTERNAL_NAME") == "" {
+		return
+	}
+
 	RunSpecsWithDefaultAndCustomReporters(t,
 		"Integration Suite",
 		[]Reporter{printer.NewlineReporter{}})
