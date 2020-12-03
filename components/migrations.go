@@ -301,6 +301,7 @@ func (_ *migrationsComponent) findOwners(ctx *cu.Context, obj cu.Object) ([]cu.O
 		}
 		err = ctx.Client.Get(ctx, types.NamespacedName{Name: ref.Name, Namespace: namespace}, ownerObj)
 		if err != nil {
+			// TODO IMPORTANT If this is a 403, don't bubble up the error. Probably a custom type we don't have access to, just pretend it's not there.
 			return nil, errors.Wrapf(err, "error finding object type for owner reference %v", ref)
 		}
 		obj = ownerObj.(cu.Object)
