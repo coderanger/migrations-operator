@@ -103,7 +103,7 @@ func (hook *initInjector) handleInner(ctx context.Context, req admission.Request
 				},
 			},
 		}
-		log.Info("Injecting init container", "pod", fmt.Sprintf("%s/%s", pod.Namespace, pod.Name), "migrator", fmt.Sprintf("%s/%s", m.Namespace, m.Name))
+		log.Info("Injecting init container", "pod", fmt.Sprintf("%s/%s", req.Namespace, req.Name), "migrator", fmt.Sprintf("%s/%s", m.Namespace, m.Name))
 		pod.Spec.InitContainers = append(pod.Spec.InitContainers, initContainer)
 	}
 
