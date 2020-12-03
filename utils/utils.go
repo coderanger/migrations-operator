@@ -43,7 +43,8 @@ func ListMatchingMigrators(ctx context.Context, c client.Client, pod metav1.Obje
 			continue
 		}
 		if selector.Matches(podLabels) {
-			migrators = append(migrators, &m)
+			migrator := m
+			migrators = append(migrators, &migrator)
 		}
 	}
 	return migrators, nil
