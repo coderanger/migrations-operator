@@ -43,6 +43,10 @@ func TestIntegration(t *testing.T) {
 var _ = BeforeSuite(func(done Done) {
 	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
 
+	if os.Getenv("INTEGRATION_EXTERNAL_NAME") == "" {
+		Skip("Integration tests require $INTEGRATION_EXTERNAL_NAME and $INTEGRATION_IMAGE_NAME")
+	}
+
 	By("bootstrapping test environment")
 	suiteHelper = cu.Functional().
 		API(migrationsv1beta1.AddToScheme).
