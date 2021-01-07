@@ -176,6 +176,11 @@ func (comp *migrationsComponent) Reconcile(ctx *cu.Context) (cu.Result, error) {
 	}
 	// TODO resources?
 
+	// Remove the probes since they will rarely work.
+	migrationContainer.ReadinessProbe = nil
+	migrationContainer.LivenessProbe = nil
+	migrationContainer.StartupProbe = nil
+
 	migrationPodSpec := templatePodSpec.DeepCopy()
 	migrationPodSpec.Containers = []corev1.Container{*migrationContainer}
 	migrationPodSpec.RestartPolicy = corev1.RestartPolicyNever
