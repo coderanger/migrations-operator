@@ -82,7 +82,7 @@ var _ = Describe("Migrator controller", func() {
 
 		// Mark the job as successful.
 		job := &batchv1.Job{}
-		c.EventuallyGetName("testing", job)
+		c.EventuallyGetName("testing-migrations", job)
 		job.Status.Succeeded = 1
 		c.Status().Update(job)
 
@@ -92,8 +92,8 @@ var _ = Describe("Migrator controller", func() {
 
 		// Make sure the job doesn't come back.
 		Consistently(func() error {
-			return helper.Client.Get(context.Background(), types.NamespacedName{Name: "testing", Namespace: helper.Namespace}, job)
-		}, 5).Should(MatchError("Job.batch \"testing\" not found"))
+			return helper.Client.Get(context.Background(), types.NamespacedName{Name: "testing-migrations", Namespace: helper.Namespace}, job)
+		}, 5).Should(MatchError("Job.batch \"testing-migrations\" not found"))
 
 		// Update the pod image and see if a new migration is run.
 		c.Delete(pod)
@@ -104,7 +104,7 @@ var _ = Describe("Migrator controller", func() {
 		c.EventuallyGetName("testing", migrator, c.EventuallyCondition("Ready", "False"))
 
 		// Mark the new job as successful.
-		c.EventuallyGetName("testing", job)
+		c.EventuallyGetName("testing-migrations", job)
 		job.Status.Succeeded = 1
 		c.Status().Update(job)
 

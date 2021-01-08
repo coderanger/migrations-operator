@@ -196,7 +196,7 @@ func (comp *migrationsComponent) Reconcile(ctx *cu.Context) (cu.Result, error) {
 
 	migrationJob := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:        obj.Name,
+			Name:        obj.Name + "-migrations",
 			Namespace:   obj.Namespace,
 			Labels:      obj.Labels,
 			Annotations: map[string]string{},

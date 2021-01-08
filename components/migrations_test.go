@@ -61,7 +61,7 @@ var _ = Describe("Migrations component", func() {
 		}
 		job = &batchv1.Job{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "testing",
+				Name:      "testing-migrations",
 				Namespace: "default",
 			},
 			Spec: batchv1.JobSpec{
@@ -110,9 +110,9 @@ var _ = Describe("Migrations component", func() {
 	It("starts a migration", func() {
 		helper.TestClient.Create(pod)
 		helper.MustReconcile()
-		Expect(helper.Events).To(Receive(Equal("Normal MigrationsStarted Started migration job default/testing using image myapp:latest")))
+		Expect(helper.Events).To(Receive(Equal("Normal MigrationsStarted Started migration job default/testing-migrations using image myapp:latest")))
 		Expect(obj).To(HaveCondition("MigrationsReady").WithReason("MigrationsRunning").WithStatus("False"))
-		helper.TestClient.GetName("testing", job)
+		helper.TestClient.GetName("testing-migrations", job)
 		Expect(job.Spec.Template.Spec.Containers[0].Name).To(Equal("migrations"))
 		Expect(job.Spec.Template.Spec.Containers[0].Image).To(Equal("myapp:latest"))
 	})
@@ -123,7 +123,7 @@ var _ = Describe("Migrations component", func() {
 		helper.MustReconcile()
 		Expect(obj).To(HaveCondition("MigrationsReady").WithReason("MigrationsRunning").WithStatus("False"))
 		job2 := &batchv1.Job{}
-		helper.TestClient.GetName("testing", job2)
+		helper.TestClient.GetName("testing-migrations", job2)
 		Expect(job.Spec).To(Equal(job2.Spec))
 	})
 
@@ -133,7 +133,7 @@ var _ = Describe("Migrations component", func() {
 		helper.TestClient.Create(job)
 		helper.MustReconcile()
 		Expect(obj).To(HaveCondition("MigrationsReady").WithReason("StaleJob").WithStatus("False"))
-		err := helper.Client.Get(context.Background(), types.NamespacedName{Name: "testing", Namespace: "default"}, job)
+		err := helper.Client.Get(context.Background(), types.NamespacedName{Name: "testing-migrations", Namespace: "default"}, job)
 		Expect(kerrors.IsNotFound(err)).To(BeTrue())
 	})
 
@@ -143,7 +143,7 @@ var _ = Describe("Migrations component", func() {
 		helper.TestClient.Create(job)
 		helper.MustReconcile()
 		Expect(obj).To(HaveCondition("MigrationsReady").WithStatus("True"))
-		err := helper.Client.Get(context.Background(), types.NamespacedName{Name: "testing", Namespace: "default"}, job)
+		err := helper.Client.Get(context.Background(), types.NamespacedName{Name: "testing-migrations", Namespace: "default"}, job)
 		Expect(kerrors.IsNotFound(err)).To(BeTrue())
 	})
 
@@ -154,7 +154,7 @@ var _ = Describe("Migrations component", func() {
 		helper.MustReconcile()
 		Expect(obj).To(HaveCondition("MigrationsReady").WithStatus("False").WithReason("MigrationsFailed"))
 		job2 := &batchv1.Job{}
-		helper.TestClient.GetName("testing", job2)
+		helper.TestClient.GetName("testing-migrations", job2)
 		Expect(job.Spec).To(Equal(job2.Spec))
 	})
 
@@ -173,7 +173,7 @@ var _ = Describe("Migrations component", func() {
 		pod2.Spec.Containers[0].Image = "two:latest"
 		helper.TestClient.Create(pod2)
 		helper.MustReconcile()
-		helper.TestClient.GetName("testing", job)
+		helper.TestClient.GetName("testing-migrations", job)
 		Expect(job.Spec.Template.Spec.Containers[0].Image).To(Equal("two:latest"))
 	})
 
@@ -181,7 +181,7 @@ var _ = Describe("Migrations component", func() {
 		obj.Spec.Image = "other:1"
 		helper.TestClient.Create(pod)
 		helper.MustReconcile()
-		helper.TestClient.GetName("testing", job)
+		helper.TestClient.GetName("testing-migrations", job)
 		Expect(job.Spec.Template.Spec.Containers[0].Image).To(Equal("other:1"))
 	})
 
@@ -190,7 +190,7 @@ var _ = Describe("Migrations component", func() {
 		obj.Spec.Command = &command
 		helper.TestClient.Create(pod)
 		helper.MustReconcile()
-		helper.TestClient.GetName("testing", job)
+		helper.TestClient.GetName("testing-migrations", job)
 		Expect(job.Spec.Template.Spec.Containers[0].Command).To(Equal([]string{"run", "migrations"}))
 	})
 
@@ -199,7 +199,7 @@ var _ = Describe("Migrations component", func() {
 		obj.Spec.Args = &args
 		helper.TestClient.Create(pod)
 		helper.MustReconcile()
-		helper.TestClient.GetName("testing", job)
+		helper.TestClient.GetName("testing-migrations", job)
 		Expect(job.Spec.Template.Spec.Containers[0].Args).To(Equal([]string{"run", "migrations"}))
 	})
 
@@ -246,7 +246,7 @@ var _ = Describe("Migrations component", func() {
 		helper.TestClient.Create(pod)
 
 		helper.MustReconcile()
-		helper.TestClient.GetName("testing", job)
+		helper.TestClient.GetName("testing-migrations", job)
 		Expect(job.Spec.Template.Spec.Containers[0].Image).To(Equal("myapp:v1"))
 	})
 })
