@@ -29,6 +29,24 @@ spec:
 
 This will automatically run migrations on all future deployment changes.
 
+### API
+
+There's one API object, the [Migrator](https://github.com/coderanger/migrations-operator/blob/main/api/v1beta1/migrator_types.go),
+with these fields:
+
+- selector: [LabelSelector](https://v1-18.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#labelselector-v1-meta)
+  for which pods to watch to trigger an upgrade action.
+- templateSelector: optional
+  [LabelSelector](https://v1-18.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#labelselector-v1-meta) for which
+  specific pod, selected by `selector`, to use as a template for building the upgrade Job.
+- command: optional string array which will be used as the upgrade Job's `command`.
+- args: optional string array to be used as the upgrade Job's `args`.
+- image: optional image to use for the upgrade Job.
+- container: optional name of a container from the selected template Pod. The selected container will be used to run the upgrader.
+
+The migrator Job will contain only a single container and no initContainers. Any livenessProbes and readinessProbes in the
+template will be ignored.
+
 ## How It Works
 
 The operator has three main components: the migrations controller, the waiter init container, and the injector webhook. The migrations controller watches for new pods matching its selector and if they are running a new image, it launches a Job to run the migrations as configured. The waiter init container stalls a pod from fully launching until the required migrations have been executed successfully. The injector webhook automatically adds the waiter init container to any pod that matches a Migrator object.
