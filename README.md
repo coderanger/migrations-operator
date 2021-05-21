@@ -56,7 +56,7 @@ Put together, these three components allow relatively normal Kubernetes usage wh
 
 ### Migrations-Operator vs. Helm/Argo Hooks
 
-A common choice for running database migrations is the `pre-install/upgrade` hook in both Helm and Argo-CD. This allows for ensuring that migrations succeed before the main segment of the chart or application is applied. The main frustration with this approach is you can end up having to move a lot of things into the hook. If you pod uses a Secret or ConfigMap for holding configuration data that's required for running migrations, that will have to be hook'd too. If you need a whole chart dependency to be up for migrations, it may not even be posible. Migrations-Operator solves this by lazily cloning the pod specification on the new, waiting pods.
+A common choice for running database migrations is the `pre-install/upgrade` hook in both Helm and Argo-CD. This allows for ensuring that migrations succeed before the main segment of the chart or application is applied. The main frustration with this approach is you can end up having to move a lot of things into the hook. If your pod uses a Secret or ConfigMap for holding configuration data that's required for running migrations, that will have to be hook'd too. If you need a whole chart dependency to be up for migrations, it may not even be posible. Migrations-Operator solves this by lazily cloning the pod specification on the new, waiting pods.
 
 ### Migrations-Operator vs. Init Container
 
