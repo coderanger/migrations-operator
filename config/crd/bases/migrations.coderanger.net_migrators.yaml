@@ -48,6 +48,10 @@ spec:
                 type: string
               image:
                 type: string
+              labels:
+                additionalProperties:
+                  type: string
+                type: object
               selector:
                 description: A label selector is a label query over a set of resources.
                   The result of matchLabels and matchExpressions are ANDed. An empty
