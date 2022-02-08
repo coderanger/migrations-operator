@@ -249,4 +249,13 @@ var _ = Describe("Migrations component", func() {
 		helper.TestClient.GetName("testing-migrations", job)
 		Expect(job.Spec.Template.Spec.Containers[0].Image).To(Equal("myapp:v1"))
 	})
+
+	It("applies specified labels to the migration pod", func() {
+		obj.Spec.Labels = map[string]string{"key1": "value1"}
+		helper.TestClient.Create(pod)
+		helper.MustReconcile()
+		helper.TestClient.GetName("testing-migrations", job)
+		Expect(job.Spec.Template.ObjectMeta.Labels).To(HaveKeyWithValue("key1", "value1"))
+		Expect(job.Spec.Template.ObjectMeta.Labels).To(HaveKeyWithValue("migrations", "testing"))
+	})
 })

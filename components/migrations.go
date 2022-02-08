@@ -194,6 +194,14 @@ func (comp *migrationsComponent) Reconcile(ctx *cu.Context) (cu.Result, error) {
 	}
 	migrationPodSpec.InitContainers = initContainers
 
+	// add labels to the job's pod template
+	jobTemplateLabels := map[string]string{"migrations": obj.Name}
+	if obj.Spec.Labels != nil {
+		for k, v := range obj.Spec.Labels {
+			jobTemplateLabels[k] = v
+		}
+	}
+
 	migrationJob := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        obj.Name + "-migrations",
@@ -204,7 +212,7 @@ func (comp *migrationsComponent) Reconcile(ctx *cu.Context) (cu.Result, error) {
 		Spec: batchv1.JobSpec{
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels:      map[string]string{"migrations": obj.Name},
+					Labels:      jobTemplateLabels,
 					Annotations: map[string]string{webhook.NOWAIT_MIGRATOR_ANNOTATION: "true"},
 				},
 				Spec: *migrationPodSpec,
@@ -220,7 +228,7 @@ func (comp *migrationsComponent) Reconcile(ctx *cu.Context) (cu.Result, error) {
 	uncachedObj := &migrationsv1beta1.Migrator{}
 	err = ctx.UncachedClient.Get(ctx, types.NamespacedName{Name: obj.Name, Namespace: obj.Namespace}, uncachedObj)
 	if err != nil {
-		return cu.Result{}, errors.Wrap(err, "erro getting latest migrator for status")
+		return cu.Result{}, errors.Wrap(err, "error getting latest migrator for status")
 	}
 	if uncachedObj.Status.LastSuccessfulMigration == migrationContainer.Image {
 		ctx.Conditions.SetfTrue(comp.GetReadyCondition(), "MigrationsUpToDate", "Migration %s already run", migrationContainer.Image)

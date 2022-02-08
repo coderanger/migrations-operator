@@ -29,6 +29,7 @@ type MigratorSpec struct {
 	Image            string                `json:"image,omitempty"`
 	Args             *[]string             `json:"args,omitempty"`
 	Container        string                `json:"container,omitempty"`
+	Labels           map[string]string     `json:"labels,omitempty"`
 }
 
 // MigratorStatus defines the observed state of Migrator
