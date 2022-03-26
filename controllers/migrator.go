@@ -31,6 +31,7 @@ import (
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 // +kubebuilder:rbac:groups=apps,resources=replicasets;deployments;statfulsets;daemonsets,verbs=get;list;watch
 // +kubebuilder:rbac:groups=batch,resources=cronjobs,verbs=get;list;watch
+// +kubebuilder:rbac:groups=argoproj.io,resources=rollouts,verbs=get;list;watch
 
 func Migrator(mgr ctrl.Manager) error {
 	return cu.NewReconciler(mgr).

@@ -28,6 +28,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/coderanger/migrations-operator/api/stubs/argoproj"
 	migrationsv1beta1 "github.com/coderanger/migrations-operator/api/v1beta1"
 	"github.com/coderanger/migrations-operator/controllers"
 	"github.com/coderanger/migrations-operator/http"
@@ -43,6 +44,7 @@ var (
 func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 
+	_ = argoproj.AddToScheme(scheme)
 	_ = migrationsv1beta1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }

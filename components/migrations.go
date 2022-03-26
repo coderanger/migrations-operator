@@ -39,6 +39,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
+	"github.com/coderanger/migrations-operator/api/stubs/argoproj"
 	migrationsv1beta1 "github.com/coderanger/migrations-operator/api/v1beta1"
 	"github.com/coderanger/migrations-operator/utils"
 	"github.com/coderanger/migrations-operator/webhook"
@@ -331,6 +332,8 @@ func (_ *migrationsComponent) findSpecFor(obj cu.Object) *corev1.PodSpec {
 	case *corev1.Pod:
 		return &v.Spec
 	case *appsv1.Deployment:
+		return &v.Spec.Template.Spec
+	case *argoproj.Rollout:
 		return &v.Spec.Template.Spec
 	// TODO other types. lots of them.
 	default:
