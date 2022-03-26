@@ -30,6 +30,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/coderanger/migrations-operator/api/stubs/argoproj"
 	migrationsv1beta1 "github.com/coderanger/migrations-operator/api/v1beta1"
 )
 
@@ -257,5 +258,52 @@ var _ = Describe("Migrations component", func() {
 		helper.TestClient.GetName("testing-migrations", job)
 		Expect(job.Spec.Template.ObjectMeta.Labels).To(HaveKeyWithValue("key1", "value1"))
 		Expect(job.Spec.Template.ObjectMeta.Labels).To(HaveKeyWithValue("migrations", "testing"))
+	})
+
+	It("follows owner references for an argoproj.io rollout", func() {
+		truep := true
+		rollout := &argoproj.Rollout{
+			ObjectMeta: metav1.ObjectMeta{Name: "testing"},
+			Spec: argoproj.RolloutSpec{
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name:  "main",
+								Image: "myapp:v1",
+							},
+						},
+					},
+				},
+			},
+		}
+		helper.TestClient.Create(rollout)
+		rs := &appsv1.ReplicaSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "testing-1234",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "argoproj.io/v1alpha1",
+						Kind:       "Rollout",
+						Name:       "testing",
+						Controller: &truep,
+					},
+				},
+			},
+		}
+		helper.TestClient.Create(rs)
+		pod.OwnerReferences = []metav1.OwnerReference{
+			{
+				APIVersion: "apps/v1",
+				Kind:       "ReplicaSet",
+				Name:       "testing-1234",
+				Controller: &truep,
+			},
+		}
+		helper.TestClient.Create(pod)
+
+		helper.MustReconcile()
+		helper.TestClient.GetName("testing-migrations", job)
+		Expect(job.Spec.Template.Spec.Containers[0].Image).To(Equal("myapp:v1"))
 	})
 })

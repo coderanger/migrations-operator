@@ -26,6 +26,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
+	"github.com/coderanger/migrations-operator/api/stubs/argoproj"
 	migrationsv1beta1 "github.com/coderanger/migrations-operator/api/v1beta1"
 )
 
@@ -44,5 +45,6 @@ var _ = BeforeSuite(func() {
 
 	suiteHelper = cu.Unit().
 		API(migrationsv1beta1.AddToScheme).
+		API(argoproj.AddToScheme).
 		MustBuild()
 })
