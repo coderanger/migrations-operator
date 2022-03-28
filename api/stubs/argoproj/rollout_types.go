@@ -31,7 +31,14 @@ type Rollout struct {
 
 // Rollout is the Schema for argoproj.io Rollouts
 type RolloutSpec struct {
-	Template v1.PodTemplateSpec `json:"template" protobuf:"bytes,3,opt,name=template"`
+	WorkloadRef *ObjectRef         `json:"workloadRef,omitempty" protobuf:"bytes,10,opt,name=workloadRef"`
+	Template    v1.PodTemplateSpec `json:"template" protobuf:"bytes,3,opt,name=template"`
+}
+
+type ObjectRef struct {
+	APIVersion string `json:"apiVersion,omitempty" protobuf:"bytes,1,opt,name=apiVersion"`
+	Kind       string `json:"kind,omitempty" protobuf:"bytes,2,opt,name=kind"`
+	Name       string `json:"name,omitempty" protobuf:"bytes,3,opt,name=name"`
 }
 
 // +kubebuilder:object:root=true
