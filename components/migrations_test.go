@@ -306,4 +306,62 @@ var _ = Describe("Migrations component", func() {
 		helper.TestClient.GetName("testing-migrations", job)
 		Expect(job.Spec.Template.Spec.Containers[0].Image).To(Equal("myapp:v1"))
 	})
+
+	It("follows owner references for an argoproj.io rollout with workloadref to deployment", func() {
+		truep := true
+		rollout := &argoproj.Rollout{
+			ObjectMeta: metav1.ObjectMeta{Name: "testing"},
+			Spec: argoproj.RolloutSpec{
+				WorkloadRef: &argoproj.ObjectRef{
+					Name: "testing",
+					APIVersion: "apps/v1",
+					Kind: "Deployment",
+				},
+			},
+		}
+		helper.TestClient.Create(rollout)
+		deployment := &appsv1.Deployment{
+			ObjectMeta: metav1.ObjectMeta{Name: "testing"},
+			Spec: appsv1.DeploymentSpec{
+				Template: corev1.PodTemplateSpec{
+					Spec: corev1.PodSpec{
+						Containers: []corev1.Container{
+							{
+								Name:  "main",
+								Image: "myapp:v1",
+							},
+						},
+					},
+				},
+			},
+		}
+		helper.TestClient.Create(deployment)
+		rs := &appsv1.ReplicaSet{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: "testing-1234",
+				OwnerReferences: []metav1.OwnerReference{
+					{
+						APIVersion: "argoproj.io/v1alpha1",
+						Kind:       "Rollout",
+						Name:       "testing",
+						Controller: &truep,
+					},
+				},
+			},
+		}
+		helper.TestClient.Create(rs)
+		pod.OwnerReferences = []metav1.OwnerReference{
+			{
+				APIVersion: "apps/v1",
+				Kind:       "ReplicaSet",
+				Name:       "testing-1234",
+				Controller: &truep,
+			},
+		}
+		helper.TestClient.Create(pod)
+
+		helper.MustReconcile()
+		helper.TestClient.GetName("testing-migrations", job)
+		Expect(job.Spec.Template.Spec.Containers[0].Image).To(Equal("myapp:v1"))
+	})
 })
