@@ -327,13 +327,26 @@ func (_ *migrationsComponent) findOwners(ctx *cu.Context, obj cu.Object) ([]cu.O
 	return owners, nil
 }
 
-func (_ *migrationsComponent) findSpecFor(obj cu.Object) *corev1.PodSpec {
+func (_ *migrationsComponent) findSpecFor(ctx *cu.Context, obj cu.Object) *corev1.PodSpec {
 	switch v := obj.(type) {
 	case *corev1.Pod:
 		return &v.Spec
 	case *appsv1.Deployment:
 		return &v.Spec.Template.Spec
 	case *argoproj.Rollout:
+		if v.Spec.WorkloadRef != nil {
+			if v.Spec.WorkloadRef.Kind == "Deployment" {
+				deployment := appsv1.Deployment{}
+				err := ctx.Client.Get(ctx, client.ObjectKey{Namespace: v.Namespace, Name: v.Spec.WorkloadRef.Name}, &deployment)
+				if err != nil {
+					return nil
+				}
+				return &deployment.Spec.Template.Spec
+			} else {
+				// TODO handle other WorkloadRef types
+				return nil
+			}
+		}
 		return &v.Spec.Template.Spec
 	// TODO other types. lots of them.
 	default:
@@ -347,7 +360,7 @@ func (comp *migrationsComponent) findOwnerSpec(ctx *cu.Context, obj cu.Object) (
 		return nil, err
 	}
 	for _, owner := range owners {
-		spec := comp.findSpecFor(owner)
+		spec := comp.findSpecFor(ctx, owner)
 		if spec != nil {
 			return spec, nil
 		}
