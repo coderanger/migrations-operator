@@ -46,7 +46,7 @@ func TestIntegration(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(done Done) {
-	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
+	logf.SetLogger(zap.New(zap.UseDevMode(true), zap.WriteTo(GinkgoWriter)))
 
 	if os.Getenv("INTEGRATION_EXTERNAL_NAME") == "" {
 		Skip("Integration tests require $INTEGRATION_EXTERNAL_NAME and $INTEGRATION_IMAGE_NAME")
