@@ -14,7 +14,7 @@ limitations under the License.
 
 //+kubebuilder:object:generate=true
 //+groupName=argoproj.io
-package argoproj
+package v1alpha1
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"

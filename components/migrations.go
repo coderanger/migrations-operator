@@ -39,8 +39,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	"github.com/coderanger/migrations-operator/api/stubs/argoproj"
 	migrationsv1beta1 "github.com/coderanger/migrations-operator/api/v1beta1"
+	argoprojstubv1alpha1 "github.com/coderanger/migrations-operator/stubs/argoproj/v1alpha1"
 	"github.com/coderanger/migrations-operator/utils"
 	"github.com/coderanger/migrations-operator/webhook"
 )
@@ -333,7 +333,7 @@ func (_ *migrationsComponent) findSpecFor(ctx *cu.Context, obj cu.Object) *corev
 		return &v.Spec
 	case *appsv1.Deployment:
 		return &v.Spec.Template.Spec
-	case *argoproj.Rollout:
+	case *argoprojstubv1alpha1.Rollout:
 		if v.Spec.WorkloadRef != nil {
 			if v.Spec.WorkloadRef.Kind == "Deployment" {
 				deployment := appsv1.Deployment{}

@@ -30,8 +30,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/coderanger/migrations-operator/api/stubs/argoproj"
 	migrationsv1beta1 "github.com/coderanger/migrations-operator/api/v1beta1"
+	argoprojstubsv1alpha1 "github.com/coderanger/migrations-operator/stubs/argoproj/v1alpha1"
 )
 
 var _ = Describe("Migrations component", func() {
@@ -262,9 +262,9 @@ var _ = Describe("Migrations component", func() {
 
 	It("follows owner references for an argoproj.io rollout", func() {
 		truep := true
-		rollout := &argoproj.Rollout{
+		rollout := &argoprojstubsv1alpha1.Rollout{
 			ObjectMeta: metav1.ObjectMeta{Name: "testing"},
-			Spec: argoproj.RolloutSpec{
+			Spec: argoprojstubsv1alpha1.RolloutSpec{
 				Template: corev1.PodTemplateSpec{
 					Spec: corev1.PodSpec{
 						Containers: []corev1.Container{
@@ -309,13 +309,13 @@ var _ = Describe("Migrations component", func() {
 
 	It("follows owner references for an argoproj.io rollout with workloadref to deployment", func() {
 		truep := true
-		rollout := &argoproj.Rollout{
+		rollout := &argoprojstubsv1alpha1.Rollout{
 			ObjectMeta: metav1.ObjectMeta{Name: "testing"},
-			Spec: argoproj.RolloutSpec{
-				WorkloadRef: &argoproj.ObjectRef{
-					Name: "testing",
+			Spec: argoprojstubsv1alpha1.RolloutSpec{
+				WorkloadRef: &argoprojstubsv1alpha1.ObjectRef{
+					Name:       "testing",
 					APIVersion: "apps/v1",
-					Kind: "Deployment",
+					Kind:       "Deployment",
 				},
 			},
 		}
