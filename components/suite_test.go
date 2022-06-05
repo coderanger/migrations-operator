@@ -41,7 +41,7 @@ func TestComponents(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
+	logf.SetLogger(zap.New(zap.UseDevMode(true), zap.WriteTo(GinkgoWriter)))
 
 	suiteHelper = cu.Unit().
 		API(migrationsv1beta1.AddToScheme).
