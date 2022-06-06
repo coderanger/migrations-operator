@@ -31,13 +31,12 @@ This will automatically run migrations on all future deployment changes.
 
 ### API
 
-There's one API object, the [Migrator](https://github.com/coderanger/migrations-operator/blob/main/api/v1beta1/migrator_types.go),
-with these fields:
+There's one API object, the [Migrator][migrator-src], with these fields:
 
-- selector: [LabelSelector](https://v1-18.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#labelselector-v1-meta)
+- selector: [LabelSelector][k8s-labelselector]
   for which pods to watch to trigger an upgrade action.
 - templateSelector: optional
-  [LabelSelector](https://v1-18.docs.kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#labelselector-v1-meta) for which
+  [LabelSelector][k8s-labelselector]
   specific pod, selected by `selector`, to use as a template for building the upgrade Job.
 - command: optional string array which will be used as the upgrade Job's `command`.
 - args: optional string array to be used as the upgrade Job's `args`.
@@ -62,3 +61,7 @@ A common choice for running database migrations is the `pre-install/upgrade` hoo
 ### Migrations-Operator vs. Init Container
 
 Another common solution for database migrations is an init container to run the migration commands. The main problem here is locking, if you run 4 replicas of your application, all 4 of those are going to try and apply your migrations in parallel. You could add some leader election code to your migrations runner, however this has to be built in at the application image level and so requires a specific solution for each application framework or toolkit. Migrations-Operator has a top-level view of the world and so can ensure for only a single job at a time is created.
+
+
+[k8s-labelselector]: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+[migrator-src]: https://github.com/coderanger/migrations-operator/blob/main/api/v1beta1/migrator_types.go
