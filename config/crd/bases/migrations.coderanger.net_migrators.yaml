@@ -36,6 +36,10 @@ spec:
           spec:
             description: MigratorSpec defines the desired state of Migrator
             properties:
+              annotations:
+                additionalProperties:
+                  type: string
+                type: object
               args:
                 items:
                   type: string

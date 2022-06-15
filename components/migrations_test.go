@@ -32,6 +32,7 @@ import (
 
 	migrationsv1beta1 "github.com/coderanger/migrations-operator/api/v1beta1"
 	argoprojstubsv1alpha1 "github.com/coderanger/migrations-operator/stubs/argoproj/v1alpha1"
+	"github.com/coderanger/migrations-operator/webhook"
 )
 
 var _ = Describe("Migrations component", func() {
@@ -258,6 +259,21 @@ var _ = Describe("Migrations component", func() {
 		helper.TestClient.GetName("testing-migrations", job)
 		Expect(job.Spec.Template.ObjectMeta.Labels).To(HaveKeyWithValue("key1", "value1"))
 		Expect(job.Spec.Template.ObjectMeta.Labels).To(HaveKeyWithValue("migrations", "testing"))
+	})
+
+	It("applies nowait annotation to the migration pod", func() {
+		helper.TestClient.Create(pod)
+		helper.MustReconcile()
+		helper.TestClient.GetName("testing-migrations", job)
+		Expect(job.Spec.Template.ObjectMeta.Annotations).To(HaveKeyWithValue(webhook.NOWAIT_MIGRATOR_ANNOTATION, "true"))
+	})
+
+	It("applies specified annotations to the migration pod", func() {
+		obj.Spec.Annotations = map[string]string{"key2": "value2"}
+		helper.TestClient.Create(pod)
+		helper.MustReconcile()
+		helper.TestClient.GetName("testing-migrations", job)
+		Expect(job.Spec.Template.ObjectMeta.Annotations).To(HaveKeyWithValue("key2", "value2"))
 	})
 
 	It("follows owner references for an argoproj.io rollout", func() {
