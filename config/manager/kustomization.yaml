@@ -23,4 +23,4 @@ vars:
     version: v1
     name: controller-manager
   fieldref:
-    fieldpath: spec.template.spec.containers[1].image
+    fieldpath: spec.template.spec.containers[0].image
