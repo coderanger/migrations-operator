@@ -92,10 +92,18 @@ func (hook *initInjector) handleInner(ctx context.Context, req admission.Request
 
 	// For each migrator, inject an initContainer.
 	for _, m := range migrators {
+		// Look for the container named in the migrator and pull the image from that. If no container
+		// matches, fall back to using the first container.
+		podIdx := 0
+		for i, p := range pod.Spec.Containers {
+			if p.Name == m.Spec.Container {
+				podIdx = i
+			}
+		}
 		initContainer := corev1.Container{
 			Name:    fmt.Sprintf("migrate-wait-%s", m.Name),
 			Image:   os.Getenv("WAITER_IMAGE"),
-			Command: []string{"/waiter", pod.Spec.Containers[0].Image, m.Namespace, m.Name, os.Getenv("API_HOSTNAME")},
+			Command: []string{"/waiter", pod.Spec.Containers[podIdx].Image, m.Namespace, m.Name, os.Getenv("API_HOSTNAME")},
 			Resources: corev1.ResourceRequirements{
 				Requests: corev1.ResourceList{
 					corev1.ResourceMemory: resource.MustParse("16M"),
