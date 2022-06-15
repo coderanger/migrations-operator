@@ -62,3 +62,9 @@ A common choice for running database migrations is the `pre-install/upgrade` hoo
 ### Migrations-Operator vs. Init Container
 
 Another common solution for database migrations is an init container to run the migration commands. The main problem here is locking, if you run 4 replicas of your application, all 4 of those are going to try and apply your migrations in parallel. You could add some leader election code to your migrations runner, however this has to be built in at the application image level and so requires a specific solution for each application framework or toolkit. Migrations-Operator has a top-level view of the world and so can ensure for only a single job at a time is created.
+
+## Development
+
+### Setting up GitHub Actions
+
+In order for Actions to be able to push a container image into GHCR, a `GHCR_PAT` secret must be present on the repository. A container image will only be built on pushes to the default branch.
