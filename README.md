@@ -44,6 +44,7 @@ with these fields:
 - image: optional image to use for the upgrade Job.
 - container: optional name of a container from the selected template Pod. The selected container will be used to run the upgrader.
 - labels: optional map of labels to set on the Job's pod template, 
+- annotations: optional map of annotations to set on the Job's pod template,
 
 The migrator Job will contain only the single template container, initContainers will be included but sidecars will not. Any livenessProbes and readinessProbes in the template will be ignored.
 
