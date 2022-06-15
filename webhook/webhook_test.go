@@ -94,6 +94,113 @@ var _ = Describe("InitInjector", func() {
 		Expect(pod.Spec.InitContainers[0].Command).To(Equal([]string{"/waiter", "fake", helper.Namespace, "testing", "migrations-operator.migration-operator.svc"}))
 	})
 
+	It("selects the specified container with a multi-container Pod", func() {
+		c := helper.TestClient
+
+		migrator := &migrationsv1beta1.Migrator{
+			ObjectMeta: metav1.ObjectMeta{Name: "testing"},
+			Spec: migrationsv1beta1.MigratorSpec{
+				Selector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"app": "testing"},
+				},
+				Container: "second",
+			},
+		}
+		c.Create(migrator)
+
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{Name: "testing", Labels: map[string]string{"app": "testing"}},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name:  "main",
+						Image: "fake",
+					},
+					{
+						Name:  "second",
+						Image: "foo",
+					},
+				},
+			},
+		}
+		c.Create(pod)
+
+		c.EventuallyGetName("testing", pod)
+		Expect(pod.Spec.InitContainers).To(HaveLen(1))
+		Expect(pod.Spec.InitContainers[0].Command).To(Equal([]string{"/waiter", "foo", helper.Namespace, "testing", "migrations-operator.migration-operator.svc"}))
+	})
+
+	It("falls back to the first container if the specified container doesn't exist", func() {
+		c := helper.TestClient
+
+		migrator := &migrationsv1beta1.Migrator{
+			ObjectMeta: metav1.ObjectMeta{Name: "testing"},
+			Spec: migrationsv1beta1.MigratorSpec{
+				Selector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"app": "testing"},
+				},
+				Container: "third",
+			},
+		}
+		c.Create(migrator)
+
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{Name: "testing", Labels: map[string]string{"app": "testing"}},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name:  "main",
+						Image: "bar",
+					},
+					{
+						Name:  "second",
+						Image: "foo",
+					},
+				},
+			},
+		}
+		c.Create(pod)
+
+		c.EventuallyGetName("testing", pod)
+		Expect(pod.Spec.InitContainers).To(HaveLen(1))
+		Expect(pod.Spec.InitContainers[0].Command).To(Equal([]string{"/waiter", "bar", helper.Namespace, "testing", "migrations-operator.migration-operator.svc"}))
+	})
+
+	It("uses the first container image if no container name is supplied with a multi-container Pod", func() {
+		c := helper.TestClient
+
+		migrator := &migrationsv1beta1.Migrator{
+			ObjectMeta: metav1.ObjectMeta{Name: "testing"},
+			Spec: migrationsv1beta1.MigratorSpec{
+				Selector: &metav1.LabelSelector{
+					MatchLabels: map[string]string{"app": "testing"},
+				},
+			},
+		}
+		c.Create(migrator)
+
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{Name: "testing", Labels: map[string]string{"app": "testing"}},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name:  "main",
+						Image: "bar",
+					},
+					{
+						Name:  "second",
+						Image: "foo",
+					},
+				},
+			},
+		}
+		c.Create(pod)
+
+		c.EventuallyGetName("testing", pod)
+		Expect(pod.Spec.InitContainers).To(HaveLen(1))
+		Expect(pod.Spec.InitContainers[0].Command).To(Equal([]string{"/waiter", "bar", helper.Namespace, "testing", "migrations-operator.migration-operator.svc"}))
+	})
+
 	It("doesn't inject with a non-matching migrator", func() {
 		c := helper.TestClient
 
