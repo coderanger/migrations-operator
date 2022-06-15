@@ -56,7 +56,7 @@ jobs:
     - name: Docker Prep
       id: prep
       run: |
-        DOCKER_IMAGE=ghcr.io/coderanger/migrations-operator
+        DOCKER_IMAGE="$(echo ghcr.io/${{ github.repository }} | tr '[:upper:]' '[:lower:]')"
         VERSION=edge
         if [[ $GITHUB_REF == refs/tags/* ]]; then
           VERSION=${GITHUB_REF#refs/tags/}
