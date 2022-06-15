@@ -30,6 +30,7 @@ import (
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -311,11 +312,19 @@ func (_ *migrationsComponent) findOwners(ctx *cu.Context, obj cu.Object) ([]cu.O
 		gvk := schema.FromAPIVersionAndKind(ref.APIVersion, ref.Kind)
 		ownerObj, err := ctx.Scheme.New(gvk)
 		if err != nil {
+			// Gracefully handle kinds that we haven't registered. Useful when a Rollout or Deployment is
+			// owned by someone's in-house operator
+			if runtime.IsNotRegisteredError(err) {
+				break
+			}
 			return nil, errors.Wrapf(err, "error finding object type for owner reference %v", ref)
 		}
 		err = ctx.Client.Get(ctx, types.NamespacedName{Name: ref.Name, Namespace: namespace}, ownerObj)
 		if err != nil {
-			// TODO IMPORTANT If this is a 403, don't bubble up the error. Probably a custom type we don't have access to, just pretend it's not there.
+			// Gracefully handle objects we don't have access to
+			if kerrors.IsForbidden(err) {
+				break
+			}
 			return nil, errors.Wrapf(err, "error finding object type for owner reference %v", ref)
 		}
 		obj = ownerObj.(cu.Object)
