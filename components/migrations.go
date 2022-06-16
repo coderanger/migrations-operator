@@ -204,6 +204,16 @@ func (comp *migrationsComponent) Reconcile(ctx *cu.Context) (cu.Result, error) {
 		}
 	}
 
+	// add annotations to the job's pod template
+	jobTemplateAnnotations := map[string]string{
+		webhook.NOWAIT_MIGRATOR_ANNOTATION: "true",
+	}
+	if obj.Spec.Annotations != nil {
+		for k, v := range obj.Spec.Annotations {
+			jobTemplateAnnotations[k] = v
+		}
+	}
+
 	migrationJob := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        obj.Name + "-migrations",
@@ -215,7 +225,7 @@ func (comp *migrationsComponent) Reconcile(ctx *cu.Context) (cu.Result, error) {
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels:      jobTemplateLabels,
-					Annotations: map[string]string{webhook.NOWAIT_MIGRATOR_ANNOTATION: "true"},
+					Annotations: jobTemplateAnnotations,
 				},
 				Spec: *migrationPodSpec,
 			},
