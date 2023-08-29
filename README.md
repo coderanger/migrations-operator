@@ -5,8 +5,9 @@ A Kubernetes operator to manage database migrations or similar application setup
 ## Quick Start
 
 ### Install
-
-TODO
+1. Go must be installed before installing.
+2. Install [cert-manager](https://cert-manager.io/docs/installation/)
+3. make deploy
 
 ### Usage
 
@@ -43,7 +44,7 @@ with these fields:
 - args: optional string array to be used as the upgrade Job's `args`.
 - image: optional image to use for the upgrade Job.
 - container: optional name of a container from the selected template Pod. The selected container will be used to run the upgrader.
-- labels: optional map of labels to set on the Job's pod template, 
+- labels: optional map of labels to set on the Job's pod template,
 - annotations: optional map of annotations to set on the Job's pod template,
 
 The migrator Job will contain only the single template container, initContainers will be included but sidecars will not. Any livenessProbes and readinessProbes in the template will be ignored.
