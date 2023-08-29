@@ -27,7 +27,7 @@ spec:
         - /manager
         args:
         - --enable-leader-election
-        image: ghcr.io/coderanger/migrations-operator:latest
+        image: ghcr.io/coderanger/migrations-operator:main
         name: manager
         env:
         - name: API_HOSTNAME
