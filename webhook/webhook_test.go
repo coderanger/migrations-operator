@@ -25,6 +25,8 @@ import (
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	migrationsv1beta1 "github.com/coderanger/migrations-operator/api/v1beta1"
 )
@@ -61,6 +63,32 @@ var _ = Describe("InitInjector", func() {
 
 		c.EventuallyGetName("testing", pod)
 		Expect(pod.Spec.InitContainers).To(BeEmpty())
+	})
+
+	It("doesn't touch existing init containers with no migrators", func() {
+		c := helper.TestClient
+
+		pod := &corev1.Pod{
+			ObjectMeta: metav1.ObjectMeta{Name: "testing", Labels: map[string]string{"app": "testing"}},
+			Spec: corev1.PodSpec{
+				Containers: []corev1.Container{
+					{
+						Name:  "main",
+						Image: "fake",
+					},
+				},
+				InitContainers: []corev1.Container{
+					{
+						Name:  "init",
+						Image: "fake",
+					},
+				},
+			},
+		}
+		c.Create(pod)
+
+		c.EventuallyGetName("testing", pod)
+		Expect(pod.Spec.InitContainers[0].Name).To(Equal("init"))
 	})
 
 	It("injects with a matching migrator", func() {
@@ -251,5 +279,36 @@ var _ = Describe("InitInjector", func() {
 		}
 		err := c.Create(context.Background(), pod)
 		Expect(err).To(MatchError(ContainSubstring("no migrators found matching pod")))
+	})
+
+	It("doesn't remove restartPolicy from init containers", func() {
+		c := helper.TestClient
+
+		pod := &unstructured.Unstructured{}
+		pod.SetGroupVersionKind(schema.GroupVersionKind{Group: "", Version: "v1", Kind: "Pod"})
+		pod.SetName("testing")
+		pod.UnstructuredContent()["spec"] = map[string][]map[string]string{
+			"containers": {
+				{
+					"name":  "main",
+					"image": "fake",
+				},
+			},
+			"initContainers": {
+				{
+					"name":          "sidecar",
+					"image":         "fake",
+					"restartPolicy": "Always",
+				},
+			},
+		}
+		c.Create(pod)
+
+		c.EventuallyGetName("testing", pod)
+		spec := pod.UnstructuredContent()["spec"].(map[string]interface{})
+		println(spec)
+		initContainers := spec["initContainers"].([]interface{})
+		sidecar := initContainers[0].(map[string]interface{})
+		Expect(sidecar["restartPolicy"]).To(Equal("Always"))
 	})
 })

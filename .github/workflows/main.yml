@@ -38,7 +38,7 @@ jobs:
         run: |
           os=$(go env GOOS)
           arch=$(go env GOARCH)
-          version=1.24.2
+          version=1.29.3
           curl -L https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-${version}-${os}-${arch}.tar.gz | tar -xz -C /tmp/
           sudo mv /tmp/kubebuilder /usr/local/kubebuilder
       - run: make test
