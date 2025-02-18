@@ -22,7 +22,6 @@ import (
 	"time"
 
 	cu "github.com/coderanger/controller-utils"
-	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -48,11 +47,6 @@ import (
 
 type migrationsComponent struct{}
 
-type migrationsComponentWatchMap struct {
-	client client.Client
-	log    logr.Logger
-}
-
 func Migrations() *migrationsComponent {
 	return &migrationsComponent{}
 }
@@ -65,31 +59,28 @@ func (comp *migrationsComponent) Setup(ctx *cu.Context, bldr *ctrl.Builder) erro
 	bldr.Owns(&batchv1.Job{})
 	bldr.Watches(
 		&source.Kind{Type: &corev1.Pod{}},
-		&handler.EnqueueRequestsFromMapFunc{ToRequests: &migrationsComponentWatchMap{client: ctx.Client, log: ctx.Log}},
+		handler.EnqueueRequestsFromMapFunc(func(obj client.Object) []reconcile.Request {
+			// Obj is a Pod that just got an event, map it back to any matching Migrators.
+			requests := []reconcile.Request{}
+			// Find any Migrator objects that match this pod.
+			migrators, err := utils.ListMatchingMigrators(context.Background(), ctx.Client, obj)
+			if err != nil {
+				ctx.Log.Error(err, "error listing matching migrators")
+				// TODO Metric to track this for alerting.
+				return requests
+			}
+			for _, migrator := range migrators {
+				requests = append(requests, reconcile.Request{
+					NamespacedName: types.NamespacedName{
+						Name:      migrator.Name,
+						Namespace: migrator.Namespace,
+					},
+				})
+			}
+			return requests
+		}),
 	)
 	return nil
-}
-
-// Watch map function used above.
-// Obj is a Pod that just got an event, map it back to any matching Migrators.
-func (m *migrationsComponentWatchMap) Map(obj handler.MapObject) []reconcile.Request {
-	requests := []reconcile.Request{}
-	// Find any Migrator objects that match this pod.
-	migrators, err := utils.ListMatchingMigrators(context.Background(), m.client, obj.Meta)
-	if err != nil {
-		m.log.Error(err, "error listing matching migrators")
-		// TODO Metric to track this for alerting.
-		return requests
-	}
-	for _, migrator := range migrators {
-		requests = append(requests, reconcile.Request{
-			NamespacedName: types.NamespacedName{
-				Name:      migrator.Name,
-				Namespace: migrator.Namespace,
-			},
-		})
-	}
-	return requests
 }
 
 func (comp *migrationsComponent) Reconcile(ctx *cu.Context) (cu.Result, error) {
@@ -310,9 +301,9 @@ func (comp *migrationsComponent) Reconcile(ctx *cu.Context) (cu.Result, error) {
 	return cu.Result{}, nil
 }
 
-func (_ *migrationsComponent) findOwners(ctx *cu.Context, obj cu.Object) ([]cu.Object, error) {
+func (_ *migrationsComponent) findOwners(ctx *cu.Context, obj client.Object) ([]client.Object, error) {
 	namespace := obj.GetNamespace()
-	owners := []cu.Object{}
+	owners := []client.Object{}
 	for {
 		owners = append(owners, obj)
 		ref := metav1.GetControllerOfNoCopy(obj)
@@ -329,7 +320,8 @@ func (_ *migrationsComponent) findOwners(ctx *cu.Context, obj cu.Object) ([]cu.O
 			}
 			return nil, errors.Wrapf(err, "error finding object type for owner reference %v", ref)
 		}
-		err = ctx.Client.Get(ctx, types.NamespacedName{Name: ref.Name, Namespace: namespace}, ownerObj)
+		obj = ownerObj.(client.Object)
+		err = ctx.Client.Get(ctx, types.NamespacedName{Name: ref.Name, Namespace: namespace}, obj)
 		if err != nil {
 			// Gracefully handle objects we don't have access to
 			if kerrors.IsForbidden(err) {
@@ -337,7 +329,6 @@ func (_ *migrationsComponent) findOwners(ctx *cu.Context, obj cu.Object) ([]cu.O
 			}
 			return nil, errors.Wrapf(err, "error finding object type for owner reference %v", ref)
 		}
-		obj = ownerObj.(cu.Object)
 	}
 	// Reverse the slice so it goes top -> bottom.
 	for i, j := 0, len(owners)-1; i < j; i, j = i+1, j-1 {
@@ -346,7 +337,7 @@ func (_ *migrationsComponent) findOwners(ctx *cu.Context, obj cu.Object) ([]cu.O
 	return owners, nil
 }
 
-func (_ *migrationsComponent) findSpecFor(ctx *cu.Context, obj cu.Object) *corev1.PodSpec {
+func (_ *migrationsComponent) findSpecFor(ctx *cu.Context, obj client.Object) *corev1.PodSpec {
 	switch v := obj.(type) {
 	case *corev1.Pod:
 		return &v.Spec
@@ -373,7 +364,7 @@ func (_ *migrationsComponent) findSpecFor(ctx *cu.Context, obj cu.Object) *corev
 	}
 }
 
-func (comp *migrationsComponent) findOwnerSpec(ctx *cu.Context, obj cu.Object) (*corev1.PodSpec, error) {
+func (comp *migrationsComponent) findOwnerSpec(ctx *cu.Context, obj client.Object) (*corev1.PodSpec, error) {
 	owners, err := comp.findOwners(ctx, obj)
 	if err != nil {
 		return nil, err

@@ -40,7 +40,7 @@ func TestControllers(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(done Done) {
-	logf.SetLogger(zap.New(zap.UseDevMode(true), zap.WriteTo(GinkgoWriter)))
+	logf.SetLogger(zap.New(zap.UseDevMode(true), zap.WriteTo(GinkgoWriter))) //nolint
 
 	By("bootstrapping test environment")
 	suiteHelper = cu.Functional().

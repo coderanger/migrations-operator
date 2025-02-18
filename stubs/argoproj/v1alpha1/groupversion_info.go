@@ -12,8 +12,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-//+kubebuilder:object:generate=true
-//+groupName=argoproj.io
+// +kubebuilder:object:generate=true
+// +groupName=argoproj.io
 package v1alpha1
 
 import (
