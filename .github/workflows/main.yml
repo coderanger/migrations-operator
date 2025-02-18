@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.20
       - uses: actions/checkout@v3
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
@@ -32,15 +32,15 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.17
+          go-version: 1.20
       - name: Install Kubebuilder
         id: install-kubebuilder
         run: |
           os=$(go env GOOS)
           arch=$(go env GOARCH)
-          version=2.3.1
-          curl -L https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${version}/kubebuilder_${version}_${os}_${arch}.tar.gz | tar -xz -C /tmp/
-          sudo mv /tmp/kubebuilder_2.3.1_${os}_${arch} /usr/local/kubebuilder
+          version=1.24.2
+          curl -L https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-${version}-${os}-${arch}.tar.gz | tar -xz -C /tmp/
+          sudo mv /tmp/kubebuilder /usr/local/kubebuilder
       - run: make test
 
   build:
