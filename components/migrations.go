@@ -48,11 +48,6 @@ import (
 
 type migrationsComponent struct{}
 
-type migrationsComponentWatchMap struct {
-	client client.Client
-	log    logr.Logger
-}
-
 func Migrations() *migrationsComponent {
 	return &migrationsComponent{}
 }
