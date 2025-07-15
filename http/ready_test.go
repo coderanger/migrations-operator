@@ -19,7 +19,7 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	cu "github.com/coderanger/controller-utils"
@@ -62,7 +62,7 @@ var _ = Describe("Ready API", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(resp.StatusCode).To(Equal(200))
 		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		Expect(err).ToNot(HaveOccurred())
 		return string(body) == "true"
 	}

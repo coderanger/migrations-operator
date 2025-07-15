@@ -36,7 +36,7 @@ func APIServer(mgr ctrl.Manager) error {
 	return mgr.Add(server)
 }
 
-func (s *apiServer) Start(stop <-chan struct{}) error {
+func (s *apiServer) Start(ctx context.Context) error {
 	mux := http.NewServeMux()
 	mux.Handle("/api/ready", &readyHandler{client: s.client})
 
@@ -54,7 +54,7 @@ func (s *apiServer) Start(stop <-chan struct{}) error {
 
 	done := make(chan struct{})
 	go func() {
-		<-stop
+		<-ctx.Done()
 		log.Info("shutting down API server")
 
 		// TODO: use a context with reasonable timeout

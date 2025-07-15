@@ -18,14 +18,13 @@ package webhook
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
 
 	"github.com/pkg/errors"
+	jsonpatch "gomodules.xyz/jsonpatch/v2"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -90,6 +89,23 @@ func (hook *initInjector) handleInner(ctx context.Context, req admission.Request
 		}
 	}
 
+	if len(migrators) == 0 {
+		// Nothing to do.
+		resp := admission.Allowed("no migrators")
+		return &resp, nil
+	}
+
+	patches := []jsonpatch.JsonPatchOperation{}
+	// Check that initContainers exists at all.
+	if len(pod.Spec.InitContainers) == 0 {
+		patch := jsonpatch.JsonPatchOperation{
+			Operation: "add",
+			Path:      "/spec/initContainers",
+			Value:     []interface{}{},
+		}
+		patches = append(patches, patch)
+	}
+
 	// For each migrator, inject an initContainer.
 	for _, m := range migrators {
 		// Look for the container named in the migrator and pull the image from that. If no container
@@ -100,27 +116,26 @@ func (hook *initInjector) handleInner(ctx context.Context, req admission.Request
 				podIdx = i
 			}
 		}
-		initContainer := corev1.Container{
-			Name:    fmt.Sprintf("migrate-wait-%s", m.Name),
-			Image:   os.Getenv("WAITER_IMAGE"),
-			Command: []string{"/waiter", pod.Spec.Containers[podIdx].Image, m.Namespace, m.Name, os.Getenv("API_HOSTNAME")},
-			Resources: corev1.ResourceRequirements{
-				Requests: corev1.ResourceList{
-					corev1.ResourceMemory: resource.MustParse("16M"),
-					corev1.ResourceCPU:    resource.MustParse("10m"),
+		patch := jsonpatch.JsonPatchOperation{
+			Operation: "add",
+			Path:      "/spec/initContainers/-",
+			Value: map[string]interface{}{
+				"name":    fmt.Sprintf("migrate-wait-%s", m.Name),
+				"image":   os.Getenv("WAITER_IMAGE"),
+				"command": []string{"/waiter", pod.Spec.Containers[podIdx].Image, m.Namespace, m.Name, os.Getenv("API_HOSTNAME")},
+				"resources": map[string]interface{}{
+					"requests": map[string]string{
+						"memory": "16M",
+						"cpu":    "10m",
+					},
 				},
 			},
 		}
 		log.Info("Injecting init container", "pod", fmt.Sprintf("%s/%s", req.Namespace, req.Name), "migrator", fmt.Sprintf("%s/%s", m.Namespace, m.Name))
-		pod.Spec.InitContainers = append(pod.Spec.InitContainers, initContainer)
+		patches = append(patches, patch)
 	}
 
-	marshaledPod, err := json.Marshal(pod)
-	if err != nil {
-		return nil, errors.Wrap(err, "error encoding response object")
-	}
-
-	resp := admission.PatchResponseFromRaw(req.Object.Raw, marshaledPod)
+	resp := admission.Patched("injecting init containers", patches...)
 	return &resp, nil
 }
 

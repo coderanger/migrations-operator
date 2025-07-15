@@ -12,9 +12,9 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
-          go-version: 1.17
+          go-version: "1.20"
       - uses: actions/checkout@v3
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v3
@@ -29,18 +29,18 @@ jobs:
     # TODO Set up Kind for integration tests.
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v5
         with:
-          go-version: 1.17
+          go-version: "1.20"
       - name: Install Kubebuilder
         id: install-kubebuilder
         run: |
           os=$(go env GOOS)
           arch=$(go env GOARCH)
-          version=2.3.1
-          curl -L https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${version}/kubebuilder_${version}_${os}_${arch}.tar.gz | tar -xz -C /tmp/
-          sudo mv /tmp/kubebuilder_2.3.1_${os}_${arch} /usr/local/kubebuilder
+          version=1.30.0
+          curl -L https://storage.googleapis.com/kubebuilder-tools/kubebuilder-tools-${version}-${os}-${arch}.tar.gz | tar -xz -C /tmp/
+          sudo mv /tmp/kubebuilder /usr/local/kubebuilder
       - run: make test
 
   build:
@@ -50,9 +50,11 @@ jobs:
     - test
     - lint
     if: github.event_name != 'pull_request'
+    permissions:
+      packages: write
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Docker Prep
       id: prep
       run: |
@@ -69,19 +71,19 @@ jobs:
         if [ "${{ github.event_name }}" = "push" ]; then
           TAGS="$TAGS,${DOCKER_IMAGE}:sha-${GITHUB_SHA::8}"
         fi
-        echo ::set-output name=version::${VERSION}
-        echo ::set-output name=tags::${TAGS}
-        echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+        echo version=${VERSION} >> $GITHUB_OUTPUT
+        echo tags=${TAGS} >> $GITHUB_OUTPUT
+        echo created=$(date -u +'%Y-%m-%dT%H:%M:%SZ') >> $GITHUB_OUTPUT
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+      uses: docker/setup-buildx-action@v2
     - name: Login to Github Container Registry
-      uses: docker/login-action@v1
+      uses: docker/login-action@v2
       with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GHCR_PAT }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build and push
-      uses: docker/build-push-action@v2
+      uses: docker/build-push-action@v4
       with:
         context: .
         file: ./Dockerfile
